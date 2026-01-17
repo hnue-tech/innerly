@@ -444,6 +444,27 @@
             .logo { font-size: 1.2rem; }
             .ai-container { padding: 20px; }
         }
+			.chat-bubble {
+	    padding: 10px 14px;
+	    border-radius: 16px;
+	    margin-bottom: 8px;
+	    max-width: 75%;
+	    font-size: 14px;
+	    line-height: 1.4;
+	    word-wrap: break-word;
+		}
+	
+	.chat-bubble.user {
+	    background: #dbeafe;
+	    margin-left: auto;
+	    text-align: right;
+		}
+	
+	.chat-bubble.bot {
+	    background: #e8f5e9;
+	    margin-right: auto;
+		}
+
     </style>
 </head>
 <body>
@@ -552,12 +573,13 @@
                 </div>
                 
                 <div class="chat-box">
+					<div id="chatBox" class="chat-box"></div>
                     <textarea id="userInput" rows="4" placeholder="Ví dụ: Mình cảm thấy hơi áp lực vì bài kiểm tra ngày mai..."></textarea>
                     <button onclick="askGemini()" id="sendBtn" class="chat-btn">
                         <i class="fas fa-paper-plane"></i> Gửi tâm sự
                     </button>
                 </div>
-
+				
                 <div id="loading" class="loading-dots">
                     <i class="fas fa-circle-notch fa-spin"></i> Innerly đang suy nghĩ...
                 </div>
@@ -655,53 +677,86 @@
         const apiKey = "AIzaSyCtYRhJL5k3c038h22vMEUju_jhf9G6Tjg"; // Sẽ được hệ thống tự động điền
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-        // 1. CHATBOT CHÍNH
-        async function askGemini() {
-            const userInput = document.getElementById('userInput').value.trim();
-            const responseArea = document.getElementById('responseArea');
-            const responseText = document.getElementById('responseText');
-            const loading = document.getElementById('loading');
-            const sendBtn = document.getElementById('sendBtn');
+         // BỘ NHỚ HỘI THOẠI
+    let conversationHistory = [
+        {
+            role: "user",
+            parts: [{
+                text: "Bạn là Innerly, một người bạn AI thấu cảm dành cho học sinh. Hãy trả lời ngắn gọn (3-4 câu), giọng văn nhẹ nhàng, an ủi, khích lệ. Đừng phán xét. Nếu học sinh gặp vấn đề nghiêm trọng, hãy khuyên tìm người lớn tin cậy."
+            }]
+        }
+    ];
 
-            if (!userInput) {
-                alert("Hãy viết gì đó để Innerly hiểu bạn hơn nhé!");
-                return;
-            }
+    // 1. CHATBOT CHÍNH - HỘI THOẠI DÀI
+    async function askGemini() {
+        const userInput = document.getElementById('userInput').value.trim();
+        const chatBox = document.getElementById('chatBox');
+        const loading = document.getElementById('loading');
+        const sendBtn = document.getElementById('sendBtn');
 
-            loading.style.display = 'block';
-            responseArea.style.display = 'none';
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
-
-            try {
-                const systemPrompt = "Bạn là Innerly, một người bạn AI thấu cảm dành cho học sinh. Hãy trả lời ngắn gọn (3-4 câu), giọng văn nhẹ nhàng, an ủi, khích lệ. Đừng phán xét. Nếu học sinh gặp vấn đề nghiêm trọng, hãy khuyên tìm người lớn tin cậy.";
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: userInput }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] }
-                    })
-                });
-
-                const data = await response.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Innerly đang hơi bối rối, bạn thử lại chút nữa nhé!";
-                
-                responseText.innerText = reply;
-                responseArea.style.display = 'block';
-
-            } catch (error) {
-                console.error(error);
-                responseText.innerText = "Lỗi kết nối, kiểm tra lại mạng giúp Innerly nhé!";
-                responseArea.style.display = 'block';
-            } finally {
-                loading.style.display = 'none';
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi tâm sự';
-            }
+        if (!userInput) {
+            alert("Hãy viết gì đó để Innerly hiểu bạn hơn nhé!");
+            return;
         }
 
+        // Hiển thị tin nhắn người dùng
+        const userBubble = document.createElement("div");
+        userBubble.className = "chat-bubble user";
+        userBubble.innerText = userInput;
+        chatBox.appendChild(userBubble);
+
+        // Lưu vào lịch sử hội thoại
+        conversationHistory.push({
+            role: "user",
+            parts: [{ text: userInput }]
+        });
+
+        document.getElementById('userInput').value = "";
+
+        loading.style.display = 'block';
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: conversationHistory
+                })
+            });
+
+            const data = await response.json();
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+                || "Innerly đang hơi bối rối, bạn thử lại chút nữa nhé!";
+
+            // Hiển thị phản hồi của Innerly
+            const botBubble = document.createElement("div");
+            botBubble.className = "chat-bubble bot";
+            botBubble.innerText = reply;
+            chatBox.appendChild(botBubble);
+
+            // Lưu vào lịch sử
+            conversationHistory.push({
+                role: "model",
+                parts: [{ text: reply }]
+            });
+
+            // Tự cuộn xuống cuối
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+        } catch (error) {
+            console.error(error);
+            const errorBubble = document.createElement("div");
+            errorBubble.className = "chat-bubble bot";
+            errorBubble.innerText = "Innerly đang gặp sự cố mạng, nhưng mình vẫn ở đây với bạn nhé 💛";
+            chatBox.appendChild(errorBubble);
+        } finally {
+            loading.style.display = 'none';
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi tâm sự';
+        }
+    }
         // 2. TỪ ĐIỂN CẢM XÚC (EMOTION DICTIONARY)
         async function defineEmotion() {
             const input = document.getElementById('emotionDesc').value.trim();
