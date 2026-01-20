@@ -686,8 +686,9 @@
 
     <!-- SCRIPT GỌI API GEMINI -->
     <script>
-        const apiKey = "AIzaSyBNHVScw_7IE5yhfKiMg7e4UM7GEGwe0NI"; // Sẽ được hệ thống tự động điền
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const apiKey = "AIzaSyCHhAATBWM3tisK3pVFhgQsJjZpS4SxTjg"; 
+		// 2. Sửa lại đường dẫn model thành gemini-1.5-flash cho ổn định:
+		const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
          // BỘ NHỚ HỘI THOẠI
     let conversationHistory = [
