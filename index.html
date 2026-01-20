@@ -688,12 +688,7 @@
     <script>
 		const apiUrl = "https://innerly.hongnt-hnue.workers.dev/";
 
-	let conversationHistory = [
-	  {
-	    role: "system",
-	    text: "Bạn là Innerly, một người bạn AI thấu cảm dành cho học sinh. Trả lời ngắn gọn, nhẹ nhàng, an ủi, không phán xét."
-	  }
-	];
+	let conversationHistory = [];
 	
 	// ===== SMART RESPONSE PARSER =====
 	function extractText(data) {
