@@ -698,7 +698,8 @@
 	// ===== SMART RESPONSE PARSER =====
 	function extractText(data) {
 	  if (!data) return null;
-	  if (typeof data === "string") return data;
+		if (typeof data === "string") return data;
+		if (data.reply) return data.reply; // Khớp với Worker
 	  if (data.text) return data.text;
 	  if (data.response) return data.response;
 	  if (data.output) return data.output;
