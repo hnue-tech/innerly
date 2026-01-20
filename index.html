@@ -686,169 +686,125 @@
 
     <!-- SCRIPT GỌI API GEMINI -->
     <script>
-        const apiUrl = "https://innerly.hongnt-hnue.workers.dev/";
-         // BỘ NHỚ HỘI THOẠI
-    let conversationHistory = [
-        {
-            role: "user",
-            parts: [{
-                text: "Bạn là Innerly, một người bạn AI thấu cảm dành cho học sinh. Hãy trả lời ngắn gọn (3-4 câu), giọng văn nhẹ nhàng, an ủi, khích lệ. Đừng phán xét. Nếu học sinh gặp vấn đề nghiêm trọng, hãy khuyên tìm người lớn tin cậy."
-            }]
-        }
-    ];
+const apiUrl = "https://innerly.hongnt-hnue.workers.dev";
 
-    // 1. CHATBOT CHÍNH - HỘI THOẠI DÀI
-    async function askGemini() {
-        const userInput = document.getElementById('userInput').value.trim();
-        const chatBox = document.getElementById('chatBox');
-        const loading = document.getElementById('loading');
-        const sendBtn = document.getElementById('sendBtn');
+let conversationHistory = [
+  {
+    role: "system",
+    text: "Bạn là Innerly, một người bạn AI thấu cảm dành cho học sinh. Trả lời ngắn gọn, nhẹ nhàng, an ủi, không phán xét."
+  }
+];
 
-        if (!userInput) {
-            alert("Hãy viết gì đó để Innerly hiểu bạn hơn nhé!");
-            return;
-        }
+// ===== SMART RESPONSE PARSER =====
+function extractText(data) {
+  if (!data) return null;
+  if (typeof data === "string") return data;
+  if (data.text) return data.text;
+  if (data.response) return data.response;
+  if (data.output) return data.output;
 
-        // Hiển thị tin nhắn người dùng
-        const userBubble = document.createElement("div");
-        userBubble.className = "chat-bubble user";
-        userBubble.innerText = userInput;
-        chatBox.appendChild(userBubble);
+  // Gemini-style
+  if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    return data.candidates[0].content.parts[0].text;
+  }
 
-        // Lưu vào lịch sử hội thoại
-        conversationHistory.push({
-            role: "user",
-            parts: [{ text: userInput }]
-        });
+  return null;
+}
 
-        document.getElementById('userInput').value = "";
+async function callAI(prompt) {
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: prompt,
+        history: conversationHistory
+      })
+    });
 
-        loading.style.display = 'block';
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+    const data = await res.json();
+    const text = extractText(data);
 
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-               	body: JSON.stringify({
-				  prompt: conversationHistory
-					.map(m => m.parts[0].text)
-					.join("\n")
-				})
-            });
+    return text || "Innerly đang suy nghĩ thêm một chút nhé 💛";
+  } catch (err) {
+    console.error("AI ERROR:", err);
+    return "Innerly không kết nối được lúc này, nhưng mình vẫn ở đây với bạn 💛";
+  }
+}
 
-            const data = await response.json();
-			const reply = data.text || "Innerly đang hơi bối rối, bạn thử lại chút nữa nhé 💛";
+async function askGemini() {
+  const input = document.getElementById("userInput");
+  const chatBox = document.getElementById("chatBox");
+  const loading = document.getElementById("loading");
+  const btn = document.getElementById("sendBtn");
 
+  const text = input.value.trim();
+  if (!text) return alert("Bạn hãy viết gì đó nhé!");
 
-            // Hiển thị phản hồi của Innerly
-            const botBubble = document.createElement("div");
-            botBubble.className = "chat-bubble bot";
-            botBubble.innerText = reply;
-            chatBox.appendChild(botBubble);
+  const userBubble = document.createElement("div");
+  userBubble.className = "chat-bubble user";
+  userBubble.innerText = text;
+  chatBox.appendChild(userBubble);
 
-            // Lưu vào lịch sử
-            conversationHistory.push({
-                role: "model",
-                parts: [{ text: reply }]
-            });
+  conversationHistory.push({ role: "user", text });
+  input.value = "";
 
-            // Tự cuộn xuống cuối
-            chatBox.scrollTop = chatBox.scrollHeight;
+  loading.style.display = "block";
+  btn.disabled = true;
 
-        } catch (error) {
-            console.error(error);
-            const errorBubble = document.createElement("div");
-            errorBubble.className = "chat-bubble bot";
-            errorBubble.innerText = "Innerly đang gặp sự cố mạng, nhưng mình vẫn ở đây với bạn nhé 💛";
-            chatBox.appendChild(errorBubble);
-        } finally {
-            loading.style.display = 'none';
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi tâm sự';
-        }
-    }
-        // 2. TỪ ĐIỂN CẢM XÚC (EMOTION DICTIONARY)
-        async function defineEmotion() {
-            const input = document.getElementById('emotionDesc').value.trim();
-            const btn = document.getElementById('btnDefine');
-            const resultBox = document.getElementById('resultDefine');
-            const titleEl = document.getElementById('emotionTitle');
-            const defEl = document.getElementById('emotionDef');
+  const reply = await callAI(text);
 
-            if (!input) return alert("Bạn hãy mô tả cảm xúc của mình nhé!");
+  const botBubble = document.createElement("div");
+  botBubble.className = "chat-bubble bot";
+  botBubble.innerText = reply;
+  chatBox.appendChild(botBubble);
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
-            resultBox.style.display = 'none';
+  conversationHistory.push({ role: "assistant", text: reply });
+  chatBox.scrollTop = chatBox.scrollHeight;
 
-            try {
-                const prompt = `User input: "${input}". 
-                Task: Dựa trên mô tả này, hãy sáng tạo ra một "Tên gọi cảm xúc" thật hay, nên thơ hoặc hài hước (Tiếng Việt) và viết một định nghĩa ngắn (1 câu) cho nó giống như từ điển.
-                Output Format: Tên Cảm Xúc|Định nghĩa ngắn.`;
+  loading.style.display = "none";
+  btn.disabled = false;
+}
 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
+// ===== FEATURES =====
+async function defineEmotion() {
+  const input = document.getElementById("emotionDesc").value.trim();
+  const box = document.getElementById("resultDefine");
+  const title = document.getElementById("emotionTitle");
+  const def = document.getElementById("emotionDef");
 
-                });
+  if (!input) return alert("Hãy mô tả cảm xúc của bạn nhé!");
 
-                const data = await response.json();
-                const text = data.text || "Lỗi|Không thể tạo định nghĩa.";
-                
-                const parts = text.split('|');
-                if (parts.length >= 2) {
-                    titleEl.innerText = parts[0].trim();
-                    defEl.innerText = parts[1].trim();
-                } else {
-                    titleEl.innerText = "Cảm xúc đặc biệt";
-                    defEl.innerText = text;
-                }
-                resultBox.style.display = 'block';
+  const prompt = `Tạo tên cảm xúc và định nghĩa ngắn cho mô tả sau:\n${input}\nĐịnh dạng: Tên | Định nghĩa`;
 
-            } catch (e) { alert("Có lỗi xảy ra, thử lại sau nhé!"); } 
-            finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-magic"></i> Đặt tên cảm xúc';
-            }
-        }
+  const reply = await callAI(prompt);
+  const parts = reply.split("|");
 
-        // 3. GỢI Ý HOẠT ĐỘNG (ACTIVITY SUGGESTION)
-        async function suggestActivity() {
-            const mood = document.getElementById('moodSelect').value;
-            const btn = document.getElementById('btnSuggest');
-            const resultBox = document.getElementById('resultSuggest');
-            const activityText = document.getElementById('activityText');
+  title.innerText = (parts[0] || "Cảm xúc đặc biệt").trim();
+  def.innerText = (parts[1] || reply).trim();
+  box.style.display = "block";
+}
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tìm...';
-            resultBox.style.display = 'none';
+async function suggestActivity() {
+  const mood = document.getElementById("moodSelect").value;
+  const box = document.getElementById("resultSuggest");
+  const text = document.getElementById("activityText");
 
-            try {
-                const prompt = `User mood: "${mood}". 
-                Task: Gợi ý ĐÚNG 1 hoạt động nhỏ, cụ thể, dễ làm trong 5 phút để giúp học sinh giải tỏa tâm trạng này. (Ví dụ: Nghe bài hát ABC, tập hít thở, vẽ vời, bóp bóng stress ball...). Giọng văn thân thiện.`;
+  const prompt = `Gợi ý 1 hoạt động nhỏ trong 5 phút để giúp học sinh cảm thấy tốt hơn khi đang ${mood}.`;
 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
+  const reply = await callAI(prompt);
+  text.innerText = reply;
+  box.style.display = "block";
+}
 
-                });
+// ENTER TO SEND
+document.getElementById("userInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    askGemini();
+  }
+});
+</script>
 
-                const data = await response.json();
-                const reply = data.text || "Thử hít thở sâu nhé!";
-                
-                activityText.innerText = reply;
-                resultBox.style.display = 'block';
-
-            } catch (e) { alert("Có lỗi xảy ra, thử lại sau nhé!"); } 
-            finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-hand-sparkles"></i> Tìm hoạt động';
-            }
-        }
-    </script>
 </body>
 </html>
