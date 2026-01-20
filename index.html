@@ -731,9 +731,11 @@
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: conversationHistory
-                })
+               	body: JSON.stringify({
+				  prompt: conversationHistory
+					.map(m => m.parts[0].text)
+					.join("\n")
+				})
             });
 
             const data = await response.json();
@@ -789,7 +791,8 @@
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    body: JSON.stringify({ prompt })
+
                 });
 
                 const data = await response.json();
@@ -830,7 +833,8 @@
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    body: JSON.stringify({ prompt })
+
                 });
 
                 const data = await response.json();
