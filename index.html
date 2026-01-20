@@ -739,8 +739,8 @@
             });
 
             const data = await response.json();
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
-                || "Innerly đang hơi bối rối, bạn thử lại chút nữa nhé!";
+			const reply = data.text || "Innerly đang hơi bối rối, bạn thử lại chút nữa nhé 💛";
+
 
             // Hiển thị phản hồi của Innerly
             const botBubble = document.createElement("div");
@@ -796,7 +796,7 @@
                 });
 
                 const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Lỗi|Không thể tạo định nghĩa.";
+                const text = data.text || "Lỗi|Không thể tạo định nghĩa.";
                 
                 const parts = text.split('|');
                 if (parts.length >= 2) {
@@ -838,7 +838,7 @@
                 });
 
                 const data = await response.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Thử hít thở sâu nhé!";
+                const reply = data.text || "Thử hít thở sâu nhé!";
                 
                 activityText.innerText = reply;
                 resultBox.style.display = 'block';
