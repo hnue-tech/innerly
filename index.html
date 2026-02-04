@@ -824,17 +824,6 @@
   }
 }
 
-	
-	    const data = await res.json();
-	    const text = extractText(data);
-	
-	    return text || "Innerly đang suy nghĩ thêm một chút nhé 💛";
-	  } catch (err) {
-	    console.error("AI ERROR:", err);
-	    return "Innerly không kết nối được lúc này, nhưng mình vẫn ở đây với bạn 💛";
-	  }
-	}
-	
 	async function askGemini() {
 	  const input = document.getElementById("userInput");
 	  const chatBox = document.getElementById("chatBox");
