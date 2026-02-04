@@ -740,6 +740,61 @@
             </div>
         </div>
     </section>
+	<section id="school-contact" style="
+  max-width: 800px;
+  margin: 80px auto;
+  padding: 40px;
+  background: #f8f9fb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  font-family: system-ui, sans-serif;
+">
+
+  <h2 style="text-align:center; margin-bottom:10px;">
+    🎓 Dành cho Giáo viên & Nhà trường
+  </h2>
+
+  <p style="text-align:center; color:#555; margin-bottom:30px;">
+    Nếu thầy/cô hoặc đơn vị quan tâm đến việc triển khai <b>INNERLY</b> trong hoạt động tư vấn tâm lý học đường, STEM hoặc giáo dục số,
+    vui lòng để lại thông tin. Chúng tôi sẽ liên hệ hỗ trợ triển khai và chuyển giao mô hình.
+  </p>
+
+  <form id="schoolForm" style="display:grid; gap:16px;">
+    
+    <input type="text" id="schoolName" placeholder="Tên trường / đơn vị" required
+      style="padding:12px; border-radius:8px; border:1px solid #ccc;" />
+
+    <input type="text" id="teacherName" placeholder="Họ tên giáo viên / người liên hệ" required
+      style="padding:12px; border-radius:8px; border:1px solid #ccc;" />
+
+    <input type="email" id="contactEmail" placeholder="Email liên hệ" required
+      style="padding:12px; border-radius:8px; border:1px solid #ccc;" />
+
+    <input type="tel" id="contactPhone" placeholder="Số điện thoại (không bắt buộc)"
+      style="padding:12px; border-radius:8px; border:1px solid #ccc;" />
+
+    <textarea id="interest" rows="4"
+      placeholder="Thầy/cô quan tâm INNERLY cho hoạt động nào? (tư vấn tâm lý, tiết học STEM, CLB, chuyển đổi số, nghiên cứu...)"
+      style="padding:12px; border-radius:8px; border:1px solid #ccc;"></textarea>
+
+    <button type="submit" style="
+      padding:14px;
+      border:none;
+      border-radius:10px;
+      background:#4f46e5;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+    ">
+      📩 Gửi thông tin quan tâm
+    </button>
+
+    <p id="schoolStatus" style="text-align:center; color:green; display:none;">
+      ✔️ Thông tin đã được gửi thành công. Chúng tôi sẽ liên hệ sớm!
+    </p>
+
+  </form>
+</section>
 
     <footer>
         <div class="container">
@@ -762,7 +817,7 @@
 			<strong>INNERLY</strong> là dự án học sinh vì sức khỏe cảm xúc học đường
 		</div>
     </footer>
-
+	
     <!-- SCRIPT GỌI API GEMINI -->
     <script>
 		const apiUrl = "https://innerly.hnue.online/core.php/";
@@ -882,6 +937,39 @@
 	    askGemini();
 	  }
 	});
+</script>
+	<!-- SCRIPT GỌI API GEMINI -->
+<script>
+const SCHOOL_API_URL = "https://script.google.com/macros/s/AKfycbyeAkinwc2zJNae_Xa5q1hWWRbbNigfzF8lsnHi7hpm0l_EUsH8FHsbfppcgCp_OUox/exec";
+
+document.getElementById("schoolForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const data = {
+    school: document.getElementById("schoolName").value,
+    teacher: document.getElementById("teacherName").value,
+    email: document.getElementById("contactEmail").value,
+    phone: document.getElementById("contactPhone").value,
+    interest: document.getElementById("interest").value,
+    source: "INNERLY School Contact Form"
+  };
+
+  try {
+    await fetch(SCHOOL_API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    document.getElementById("schoolStatus").style.display = "block";
+    this.reset();
+  } catch (err) {
+    alert("Gửi không thành công, vui lòng thử lại sau.");
+  }
+});
 </script>
 
 </body>
