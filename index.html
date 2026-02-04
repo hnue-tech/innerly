@@ -813,6 +813,7 @@
         history: conversationHistory
       })
     });
+
     const data = await res.json();
     const text = extractText(data);
 
@@ -822,6 +823,7 @@
     return "Innerly không kết nối được lúc này, nhưng mình vẫn ở đây với bạn 💛";
   }
 }
+
 	
 	    const data = await res.json();
 	    const text = extractText(data);
