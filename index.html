@@ -766,44 +766,42 @@
 
     <!-- SCRIPT GỌI API GEMINI -->
     <script>
-		const apiUrl = "https://innerly.hnue.online/core.php/";
+const apiUrl = "https://innerly.hnue.online/core.php";
 
-	let conversationHistory = [];
-		// ===== PEDAGOGICAL SYSTEM PROMPT (AI HỌC ĐƯỜNG) =====
-	const SYSTEM_PROMPT = `
-	Bạn là INNERLY AI – trợ lý cảm xúc học đường dành cho học sinh từ 10–16 tuổi.
-	
-	Nguyên tắc trả lời:
-	- Dùng ngôn ngữ trong sáng, lịch sự, tích cực, không phán xét
-	- Không dùng từ tiêu cực mạnh hoặc thuật ngữ tâm lý/lâm sàng
-	- Câu ngắn, dễ hiểu, phù hợp học sinh
-	- Không đưa lời khuyên nguy hiểm hoặc nhắc đến tổn hại bản thân
-	- Luôn thể hiện sự lắng nghe và gợi ý hành động nhỏ, an toàn
-	
-	Phong cách:
-	- Nhẹ nhàng, ấm áp, như thầy cô hoặc người bạn lớn đáng tin cậy
-	- Tập trung vào cảm xúc và cách tự chăm sóc bản thân
-	`;
+let conversationHistory = [];
 
-	
-	// ===== SMART RESPONSE PARSER =====
-	function extractText(data) {
-	  if (!data) return null;
-		if (typeof data === "string") return data;
-		if (data.reply) return data.reply; // Khớp với Worker
-	  if (data.text) return data.text;
-	  if (data.response) return data.response;
-	  if (data.output) return data.output;
-	
-	  // Gemini-style
-	  if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-	    return data.candidates[0].content.parts[0].text;
-	  }
-	
-	  return null;
-	}
-	
-	async function callAI(userPrompt) {
+// ===== PEDAGOGICAL SYSTEM PROMPT =====
+const SYSTEM_PROMPT = `
+Bạn là INNERLY AI – trợ lý cảm xúc học đường dành cho học sinh từ 10–16 tuổi.
+
+Nguyên tắc trả lời:
+- Dùng ngôn ngữ trong sáng, lịch sự, tích cực, không phán xét
+- Không dùng từ tiêu cực mạnh hoặc thuật ngữ tâm lý/lâm sàng
+- Câu ngắn, dễ hiểu, phù hợp học sinh
+- Không đưa lời khuyên nguy hiểm hoặc nhắc đến tổn hại bản thân
+- Luôn thể hiện sự lắng nghe và gợi ý hành động nhỏ, an toàn
+
+Phong cách:
+- Nhẹ nhàng, ấm áp, như thầy cô hoặc người bạn lớn đáng tin cậy
+`;
+
+// ===== RESPONSE PARSER =====
+function extractText(data) {
+  if (!data) return null;
+  if (typeof data === "string") return data;
+  if (data.reply) return data.reply;
+  if (data.text) return data.text;
+  if (data.response) return data.response;
+  if (data.output) return data.output;
+
+  if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    return data.candidates[0].content.parts[0].text;
+  }
+  return null;
+}
+
+// ===== CORE CALL =====
+async function callAI(userPrompt) {
   try {
     const res = await fetch(apiUrl, {
       method: "POST",
@@ -824,85 +822,90 @@
   }
 }
 
-	async function askGemini() {
-	  const input = document.getElementById("userInput");
-	  const chatBox = document.getElementById("chatBox");
-	  const loading = document.getElementById("loading");
-	  const btn = document.getElementById("sendBtn");
-	
-	  const text = input.value.trim();
-	  if (!text) return alert("Bạn hãy viết gì đó nhé!");
-	
-	  const userBubble = document.createElement("div");
-	  userBubble.className = "chat-bubble user";
-	  userBubble.innerText = text;
-	  chatBox.appendChild(userBubble);
-	
-	  conversationHistory.push({ role: "user", text });
-	  input.value = "";
-	
-	  loading.style.display = "block";
-	  btn.disabled = true;
-	
-	  const reply = await callAI(text);
-	
-	  const botBubble = document.createElement("div");
-	  botBubble.className = "chat-bubble bot";
-	  // Convert markdown sang HTML
-	  botBubble.innerHTML = marked.parse(reply);
-	  chatBox.appendChild(botBubble);
-	
-	  conversationHistory.push({ role: "assistant", text: reply });
-	  chatBox.scrollTop = chatBox.scrollHeight;
-	
-	  loading.style.display = "none";
-	  btn.disabled = false;
-	}
-	
-	// ===== FEATURES =====
-	async function defineEmotion() {
-	  const input = document.getElementById("emotionDesc").value.trim();
-	  const box = document.getElementById("resultDefine");
-	  const title = document.getElementById("emotionTitle");
-	  const def = document.getElementById("emotionDef");
-	
-	  if (!input) return alert("Hãy mô tả cảm xúc của bạn nhé!");
-	
-	  const prompt = `Hãy đặt tên cho cảm xúc của học sinh bằng từ ngữ trong sáng, tích cực và phù hợp với lứa tuổi 10–16. Yêu cầu:- Tên cảm xúc ngắn, dễ nhớ- Không dùng từ tiêu cực mạnh hoặc thuật ngữ tâm lý
-- Định nghĩa nhẹ nhàng, dễ hiểu, 1–2 câu Mô tả cảm xúc: ${input} Định dạng: Tên cảm xúc | Định nghĩa`;
+// ===== MAIN CHAT =====
+async function askGemini() {
+  const input = document.getElementById("userInput");
+  const chatBox = document.getElementById("chatBox");
+  const loading = document.getElementById("loading");
+  const btn = document.getElementById("sendBtn");
 
-	
-	  const reply = await callAI(prompt);
-	  const parts = reply.split("|");
+  const text = input.value.trim();
+  if (!text) return alert("Bạn hãy viết gì đó nhé!");
 
-	  title.innerText = (parts[0] || "Cảm xúc đặc biệt").trim();
-	  // Convert markdown sang HTML
-	  def.innerHTML = marked.parse((parts[1] || reply).trim());
-	  box.style.display = "block";
-	}
-	
-	async function suggestActivity() {
-	  const mood = document.getElementById("moodSelect").value;
-	  const box = document.getElementById("resultSuggest");
-	  const text = document.getElementById("activityText");
-	
-	  const prompt = `Học sinh đang cảm thấy: ${mood} Hãy gợi ý 1 hoạt động nhỏ trong 5 phút: - An toàn, đơn giản, làm được trong lớp hoặc ở nhà - Không dùng điện thoại hoặc mạng xã hội - Ngôn ngữ tích cực, dễ hiểu với học sinh nhỏ
-- Kết thúc bằng một câu động viên ngắn `;
+  const userBubble = document.createElement("div");
+  userBubble.className = "chat-bubble user";
+  userBubble.innerText = text;
+  chatBox.appendChild(userBubble);
 
+  conversationHistory.push({ role: "user", text });
+  input.value = "";
 
-	  const reply = await callAI(prompt);
-	  // Convert markdown sang HTML
-	  text.innerHTML = marked.parse(reply);
-	  box.style.display = "block";
-	}
-	
-	// ENTER TO SEND
-	document.getElementById("userInput").addEventListener("keydown", e => {
-	  if (e.key === "Enter" && !e.shiftKey) {
-	    e.preventDefault();
-	    askGemini();
-	  }
-	});
+  loading.style.display = "block";
+  btn.disabled = true;
+
+  const reply = await callAI(text);
+
+  const botBubble = document.createElement("div");
+  botBubble.className = "chat-bubble bot";
+  botBubble.innerHTML = marked.parse(reply);
+  chatBox.appendChild(botBubble);
+
+  conversationHistory.push({ role: "assistant", text: reply });
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  loading.style.display = "none";
+  btn.disabled = false;
+}
+
+// ===== MINI TOOLS =====
+async function defineEmotion() {
+  const input = document.getElementById("emotionDesc").value.trim();
+  const box = document.getElementById("resultDefine");
+  const title = document.getElementById("emotionTitle");
+  const def = document.getElementById("emotionDef");
+
+  if (!input) return alert("Hãy mô tả cảm xúc của bạn nhé!");
+
+  const prompt = `Hãy đặt tên cho cảm xúc của học sinh bằng từ ngữ trong sáng, tích cực và phù hợp với lứa tuổi 10–16.
+- Tên cảm xúc ngắn, dễ nhớ
+- Không dùng từ tiêu cực mạnh hoặc thuật ngữ tâm lý
+- Định nghĩa nhẹ nhàng, dễ hiểu, 1–2 câu
+
+Mô tả cảm xúc: ${input}
+Định dạng: Tên cảm xúc | Định nghĩa`;
+
+  const reply = await callAI(prompt);
+  const parts = reply.split("|");
+
+  title.innerText = (parts[0] || "Cảm xúc đặc biệt").trim();
+  def.innerHTML = marked.parse((parts[1] || reply).trim());
+  box.style.display = "block";
+}
+
+async function suggestActivity() {
+  const mood = document.getElementById("moodSelect").value;
+  const box = document.getElementById("resultSuggest");
+  const text = document.getElementById("activityText");
+
+  const prompt = `Học sinh đang cảm thấy: ${mood}
+Hãy gợi ý 1 hoạt động nhỏ trong 5 phút:
+- An toàn, đơn giản, làm được trong lớp hoặc ở nhà
+- Không dùng điện thoại hoặc mạng xã hội
+- Ngôn ngữ tích cực, dễ hiểu
+- Kết thúc bằng một câu động viên ngắn`;
+
+  const reply = await callAI(prompt);
+  text.innerHTML = marked.parse(reply);
+  box.style.display = "block";
+}
+
+// ENTER TO SEND
+document.getElementById("userInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    askGemini();
+  }
+});
 </script>
 
 </body>
