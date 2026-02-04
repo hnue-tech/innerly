@@ -573,9 +573,15 @@
             <h1>INNERLY</h1>
             <h2>Bộ sản phẩm cân bằng cảm xúc học đường<br>Nơi mỗi cảm xúc của tuổi teen đều được trân trọng và lắng nghe</h2>
            
-            <div class="hero-img-placeholder">
-                <img src="INNERLY/Anh mo dau.png" alt="Học sinh trải nghiệm Innerly">
-            </div>
+            <div class="hero-img-placeholder" style="position: relative;">
+	 		 <iframe
+				src="https://drive.google.com/file/d/1n4QAiCz-0hFvYzey8Qxj2rb1c0gyZeF3/preview"
+				title="Giới thiệu dự án INNERLY"
+				allow="autoplay"
+				loading="lazy"
+				style="width:100%; height:100%; border:none; border-radius:15px;">
+			  </iframe>
+	        </div>
         </div>
     </section>
 
@@ -753,6 +759,9 @@
                 </div>
             </div>
         </div>
+		<div style="text-align:center; margin-top:40px; color:#ddd; font-size:1.5rem;">
+			<strong>INNERLY</strong> là dự án học sinh vì sức khỏe cảm xúc học đường
+		</div>
     </footer>
 
     <!-- SCRIPT GỌI API GEMINI -->
@@ -760,6 +769,22 @@
 		const apiUrl = "https://innerly.hnue.online/core.php/";
 
 	let conversationHistory = [];
+		// ===== PEDAGOGICAL SYSTEM PROMPT (AI HỌC ĐƯỜNG) =====
+	const SYSTEM_PROMPT = `
+	Bạn là INNERLY AI – trợ lý cảm xúc học đường dành cho học sinh từ 10–16 tuổi.
+	
+	Nguyên tắc trả lời:
+	- Dùng ngôn ngữ trong sáng, lịch sự, tích cực, không phán xét
+	- Không dùng từ tiêu cực mạnh hoặc thuật ngữ tâm lý/lâm sàng
+	- Câu ngắn, dễ hiểu, phù hợp học sinh
+	- Không đưa lời khuyên nguy hiểm hoặc nhắc đến tổn hại bản thân
+	- Luôn thể hiện sự lắng nghe và gợi ý hành động nhỏ, an toàn
+	
+	Phong cách:
+	- Nhẹ nhàng, ấm áp, như thầy cô hoặc người bạn lớn đáng tin cậy
+	- Tập trung vào cảm xúc và cách tự chăm sóc bản thân
+	`;
+
 	
 	// ===== SMART RESPONSE PARSER =====
 	function extractText(data) {
@@ -778,16 +803,25 @@
 	  return null;
 	}
 	
-	async function callAI(prompt) {
-	  try {
-	    const res = await fetch(apiUrl, {
-	      method: "POST",
-	      headers: { "Content-Type": "application/json" },
-	      body: JSON.stringify({
-	        prompt: prompt,
-	        history: conversationHistory
-	      })
-	    });
+	async function callAI(userPrompt) {
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: SYSTEM_PROMPT + "\n\nHọc sinh nói:\n" + userPrompt,
+        history: conversationHistory
+      })
+    });
+    const data = await res.json();
+    const text = extractText(data);
+
+    return text || "Innerly đang suy nghĩ thêm một chút nhé 💛";
+  } catch (err) {
+    console.error("AI ERROR:", err);
+    return "Innerly không kết nối được lúc này, nhưng mình vẫn ở đây với bạn 💛";
+  }
+}
 	
 	    const data = await res.json();
 	    const text = extractText(data);
@@ -843,7 +877,9 @@
 	
 	  if (!input) return alert("Hãy mô tả cảm xúc của bạn nhé!");
 	
-	  const prompt = `Tạo tên cảm xúc và định nghĩa ngắn cho mô tả sau:\n${input}\nĐịnh dạng: Tên | Định nghĩa`;
+	  const prompt = `Hãy đặt tên cho cảm xúc của học sinh bằng từ ngữ trong sáng, tích cực và phù hợp với lứa tuổi 10–16. Yêu cầu:- Tên cảm xúc ngắn, dễ nhớ- Không dùng từ tiêu cực mạnh hoặc thuật ngữ tâm lý
+- Định nghĩa nhẹ nhàng, dễ hiểu, 1–2 câu Mô tả cảm xúc: ${input} Định dạng: Tên cảm xúc | Định nghĩa`;
+
 	
 	  const reply = await callAI(prompt);
 	  const parts = reply.split("|");
@@ -859,7 +895,9 @@
 	  const box = document.getElementById("resultSuggest");
 	  const text = document.getElementById("activityText");
 	
-	  const prompt = `Gợi ý 1 hoạt động nhỏ trong 5 phút để giúp học sinh cảm thấy tốt hơn khi đang ${mood}.`;
+	  const prompt = `Học sinh đang cảm thấy: ${mood} Hãy gợi ý 1 hoạt động nhỏ trong 5 phút: - An toàn, đơn giản, làm được trong lớp hoặc ở nhà - Không dùng điện thoại hoặc mạng xã hội - Ngôn ngữ tích cực, dễ hiểu với học sinh nhỏ
+- Kết thúc bằng một câu động viên ngắn `;
+
 
 	  const reply = await callAI(prompt);
 	  // Convert markdown sang HTML
@@ -877,4 +915,5 @@
 </script>
 
 </body>
+
 </html>
